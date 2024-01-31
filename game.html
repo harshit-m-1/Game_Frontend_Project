@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Minesweeper Cricket</title>
+    <style>
+        .run-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
+            font-weight: bold;
+            color: rgb(11, 1, 47);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            animation: animate-horizontal 4s linear infinite;
+        }
+
+        @keyframes animate-horizontal {
+            0% {
+                left: 0%;
+            }
+
+            100% {
+                left: 50%;
+            }
+        }
+
+        @keyframes animate-four {
+            0% {
+                background-color: rgb(5, 250, 33);
+            }
+
+            100% {
+                background-color: #fff;
+            }
+        }
+
+        @keyframes animate-six {
+            0% {
+                background-color: gold;
+            }
+
+            100% {
+                background-color: #fff;
+            }
+        }
+
+        .animate-four {
+            animation: animate-four 4s linear;
+        }
+
+        .animate-six {
+            animation: animate-six 4s linear;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: rgb(222, 245, 202);
+        }
+
+        #game-container {
+            text-align: center;
+        }
+
+        .block {
+            width: 50px;
+            height: 50px;
+            background-color: rgb(134, 200, 244);
+            border: 1px solid rgb(19, 2, 46);
+            display: inline-block;
+            text-align: center;
+            font-size: 25px;
+            font-family: 'Times New Roman', Times, serif;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="game-container">
+        <h1>Welcome to my game, Minesweeper Cricket!</h1>
+        <p>Enter grid size (e.g., 6x6, 7x7): <input type="text" id="grid-size-input" placeholder="Enter grid size"></p>
+        <button id="start-button" onclick="startGame()">Start Game</button>
+        <div id="grid"></div>
+        <p>Score: <span id="score">0</span></p>
+
+    </div>
+    <img src=""C:\Users\hp\OneDrive\Desktop\Lords-Cricket-Ground-Pavilion-06-08-2017.jpg"" alt="image" width="400" height="400">
+
+    <script>
+        // Game configuration
+        let gridWidth = 6; // Change to 7 for a 7x7 grid
+        let gridHeight = 6; // Change to 7 for a 7x7 grid
+        const totalFielders = 11;
+
+
+        // Game state
+        let grid = [];
+        let score = 0;
+        let highestScore = 0;
+        let gameOver = false;
+        let doubleRunBlocks = [];
+
+        // Generate random fielder positions
+        function generateFielderPositions() {
+            const positions = new Set();
+            while (positions.size < totalFielders) {
+                const x = Math.floor(Math.random() * gridWidth);
+                const y = Math.floor(Math.random() * gridHeight);
+                positions.add(`${x}-${y}`);
+            }
+            return positions;
+        }
+
+        // Initialize the grid
+        function initializeGrid() {
+            const gridElement = document.getElementById('grid');
+            for (let y = 0; y < gridHeight; y++) {
+                for (let x = 0; x < gridWidth; x++) {
+                    const block = document.createElement('div');
+                    block.className = 'block';
+                    block.setAttribute('data-x', x);
+                    block.setAttribute('data-y', y);
+                    block.addEventListener('click', handleClick);
+                    gridElement.appendChild(block);
+                    grid.push(block);
+                }
+                gridElement.appendChild(document.createElement('br'));
+            }
+        }
+
+        // Handle block click event
+        function handleClick(event) {
+            if (gameOver) return;
+
+            const block = event.target;
+            const x = parseInt(block.getAttribute('data-x'));
+            const y = parseInt(block.getAttribute('data-y'));
+
+            if (grid[x + y * gridWidth].classList.contains('fielder')) {
+                endGame();
+            } else {
+                const run = getRandomRun(); // Get a random run (1 to 6 excluding 5)
+                block.innerHTML = run.toString();
+                block.style.backgroundColor = '#fff';
+                block.removeEventListener('click', handleClick);
+                score += run;
+                document.getElementById('score').textContent = score;
+
+                if (run === 4) {
+                    animateRun('four', 'That\'s a FOUR!'); // Call animation function for four with text
+
+                } else if (run === 6) {
+                    animateRun('six', 'That\'s a SIX!'); // Call animation function for six with text
+
+                }
+
+                if (doubleRunBlocks.includes(block)) {
+                    score += run * 2; // Double the runs for the next ball
+                    document.getElementById('score').textContent = score;
+                    doubleRunBlocks = doubleRunBlocks.filter((b) => b !== block); // Remove the block from double run blocks
+                } else {
+                    const randomBlocks = getRandomBlocks(2); // Get 2 random blocks
+                    doubleRunBlocks.push(...randomBlocks); // Add the random blocks to double run blocks
+                    animateDoubleRunBlocks(randomBlocks); // Animate the double run blocks
+                }
+            }
+        }
+
+        // Animate run
+        function animateRun(runType, runText) {
+            const animationClass = 'animate-' + runType;
+            const textElement = document.createElement('div');
+            textElement.classList.add('run-text');
+            textElement.textContent = runText;
+            document.body.appendChild(textElement);
+            document.body.classList.add(animationClass);
+            setTimeout(function () {
+                document.body.classList.remove(animationClass);
+                document.body.removeChild(textElement);
+            }, 4000); // Update the delay to 4000 milliseconds (4 seconds)
+        }
+
+        // Animate double run blocks
+        function animateDoubleRunBlocks(blocks) {
+            blocks.forEach((block) => {
+                block.style.animation = 'animate-double-run 4s linear infinite';
+                block.style.animationIterationCount = '1';
+            });
+        }
+
+        // Get a random run (1 to 6 excluding 5)
+        function getRandomRun() {
+            const runs = [1, 2, 3, 4, 6]; // Array of possible runs
+            return runs[Math.floor(Math.random() * runs.length)];
+        }
+
+        // Get random blocks excluding fielder and double run blocks
+        function getRandomBlocks(count) {
+            const blocks = [];
+            const excludedBlocks = new Set([...doubleRunBlocks.map((b) => b), ...fielderBlocks.map((b) => b)]);
+            while (blocks.length < count) {
+                const randomBlock = grid[Math.floor(Math.random() * grid.length)];
+                if (!excludedBlocks.has(randomBlock)) {
+                    blocks.push(randomBlock);
+                    excludedBlocks.add(randomBlock);
+                }
+            }
+            return blocks;
+        }
+
+        
+        // End the game
+function endGame() {
+    gameOver = true;
+
+    for (let i = 0; i < grid.length; i++) {
+        if (grid[i].classList.contains('fielder')) {
+            grid[i].style.backgroundColor = '#f00';
+        }
+        grid[i].removeEventListener('click', handleClick);
+    }
+
+    if (score > highestScore) {
+        highestScore = score;
+    }
+
+    const textElement = document.createElement('div');
+    textElement.classList.add('run-text');
+    textElement.textContent = "That's out!";
+    document.body.appendChild(textElement);
+
+    // Blink the background color
+    const blinkInterval = setInterval(function () {
+        document.body.style.backgroundColor = document.body.style.backgroundColor === 'rgb(222, 245, 202)' ? '#f00' : 'rgb(222, 245, 202)';
+    }, 500); // Change the blink speed (milliseconds) if desired
+
+    setTimeout(function () {
+        clearInterval(blinkInterval); // Stop the background color blinking
+        document.body.style.backgroundColor = 'rgb(222, 245, 202)'; // Reset the background color
+        document.body.removeChild(textElement);
+
+        const choice = confirm(
+            'That is the end of a beautiful inning! \nFinal Score: ' +
+                score +
+                '\nHighest Score Till Now: ' +
+                highestScore +
+                '\n\nDo you want to start a new game?'
+        );
+        if (choice) {
+            resetGame();
+        } else {
+            // Exit the game or perform any other desired action
+            // For example, you can redirect the player to another page or display a thank you message.
+            alert('Thank you for playing Minesweeper Cricket!');
+        }
+    }, 4000); // Update the delay to 4000 milliseconds (4 seconds)
+}
+
+
+        // Reset the game
+        function resetGame() {
+            score = 0;
+            gameOver = false;
+            doubleRunBlocks = [];
+            for (let i = 0; i < grid.length; i++) {
+                grid[i].innerHTML = '';
+                grid[i].style.backgroundColor = ' rgb(134, 200, 244)';
+                grid[i].addEventListener('click', handleClick);
+            }
+            document.getElementById('score').textContent = score;
+        }
+
+        // Start the game
+        function startGame() {
+            const gridSizeInput = document.getElementById('grid-size-input').value;
+            const gridSize = gridSizeInput.split('x');
+            const width = parseInt(gridSize[0]);
+            const height = parseInt(gridSize[1]);
+            if (isNaN(width) || isNaN(height)) {
+                alert('Invalid grid size. Please enter a valid grid size (e.g., 6x6, 7x7).');
+                return;
+            }
+            gridWidth = width;
+            gridHeight = height;
+            resetGame();
+            initializeGrid();
+            const fielderPositions = generateFielderPositions();
+            fielderBlocks = [];
+            for (let i = 0; i < grid.length; i++) {
+                const x = i % gridWidth;
+                const y = Math.floor(i / gridWidth);
+                if (fielderPositions.has(`${x}-${y}`)) {
+                    grid[i].classList.add('fielder');
+                    fielderBlocks.push(grid[i]);
+                }
+            }
+            doubleRunBlocks = getRandomBlocks(2); // Get 2 random blocks for double runs
+        }
+    </script>
+</body>
+
+</html>
